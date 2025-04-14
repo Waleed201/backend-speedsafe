@@ -1,0 +1,57 @@
+const mongoose = require('mongoose');
+
+const serviceSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    description: {
+      type: String,
+      required: true
+    },
+    images: [
+      {
+        path: {
+          type: String,
+          required: true
+        },
+        isMain: {
+          type: Boolean,
+          default: false
+        }
+      }
+    ],
+    catalog: {
+      file: {
+        type: String,
+        default: null
+      },
+      fileType: {
+        type: String,
+        enum: ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', ''],
+        default: ''
+      },
+      fileName: {
+        type: String,
+        default: ''
+      },
+      uploadDate: {
+        type: Date,
+        default: null
+      }
+    },
+    hasCatalog: {
+      type: Boolean,
+      default: false
+    }
+  },
+  {
+    timestamps: true
+  }
+);
+
+const Service = mongoose.model('Service', serviceSchema);
+
+module.exports = Service; 

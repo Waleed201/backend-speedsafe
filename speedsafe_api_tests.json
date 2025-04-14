@@ -1,0 +1,828 @@
+{
+  "apiTests": {
+    "userAPIs": {
+      "login": {
+        "endpoint": "/api/users/login",
+        "method": "POST",
+        "description": "Authenticate user and get token",
+        "testData": {
+          "validUser": {
+            "email": "admin@speedsafe.com",
+            "password": "admin123"
+          },
+          "invalidUser": {
+            "email": "nonexistent@speedsafe.com",
+            "password": "wrongpassword"
+          }
+        },
+        "expectedResponses": {
+          "success": {
+            "status": 200,
+            "hasFields": ["_id", "name", "email", "isAdmin", "token"]
+          },
+          "error": {
+            "status": 401,
+            "message": "Invalid email or password"
+          }
+        }
+      },
+      "register": {
+        "endpoint": "/api/users",
+        "method": "POST",
+        "description": "Register a new user (admin only)",
+        "requiresAuth": true,
+        "requiresAdmin": true,
+        "testData": {
+          "validUser": {
+            "name": "Test User",
+            "email": "testuser@speedsafe.com",
+            "password": "123456"
+          },
+          "existingUser": {
+            "name": "Existing User",
+            "email": "admin@speedsafe.com",
+            "password": "123456"
+          }
+        },
+        "expectedResponses": {
+          "success": {
+            "status": 201,
+            "hasFields": ["_id", "name", "email", "isAdmin", "token"]
+          },
+          "error": {
+            "status": 400,
+            "message": "User already exists"
+          }
+        }
+      },
+      "getUserProfile": {
+        "endpoint": "/api/users/profile",
+        "method": "GET",
+        "description": "Get user profile",
+        "requiresAuth": true,
+        "testData": {},
+        "expectedResponses": {
+          "success": {
+            "status": 200,
+            "hasFields": ["_id", "name", "email", "isAdmin"]
+          },
+          "error": {
+            "status": 401,
+            "message": "Not authorized, no token"
+          }
+        }
+      },
+      "updateUserProfile": {
+        "endpoint": "/api/users/profile",
+        "method": "PUT",
+        "description": "Update user profile",
+        "requiresAuth": true,
+        "testData": {
+          "validUpdate": {
+            "name": "Updated Name",
+            "email": "updated@speedsafe.com",
+            "password": "newpassword123"
+          },
+          "partialUpdate": {
+            "name": "Just Name Update"
+          }
+        },
+        "expectedResponses": {
+          "success": {
+            "status": 200,
+            "hasFields": ["_id", "name", "email", "isAdmin", "token"]
+          },
+          "error": {
+            "status": 401,
+            "message": "Not authorized, no token"
+          }
+        }
+      }
+    },
+    "productAPIs": {
+      "getProducts": {
+        "endpoint": "/api/products",
+        "method": "GET",
+        "description": "Get all products",
+        "testData": {},
+        "expectedResponses": {
+          "success": {
+            "status": 200,
+            "isArray": true
+          }
+        }
+      },
+      "getProductById": {
+        "endpoint": "/api/products/{id}",
+        "method": "GET",
+        "description": "Get a single product by ID",
+        "testData": {
+          "validId": "validProductId",
+          "invalidId": "invalidProductId"
+        },
+        "expectedResponses": {
+          "success": {
+            "status": 200,
+            "hasFields": ["_id", "name", "description", "category", "images"]
+          },
+          "error": {
+            "status": 404,
+            "message": "Product not found"
+          }
+        }
+      },
+      "createProduct": {
+        "endpoint": "/api/products",
+        "method": "POST",
+        "description": "Create a new product (admin only)",
+        "requiresAuth": true,
+        "requiresAdmin": true,
+        "contentType": "multipart/form-data",
+        "testData": {
+          "validProduct": {
+            "name": "Test Product",
+            "description": "This is a test product",
+            "category": "security-seals",
+            "features": "Feature 1, Feature 2, Feature 3",
+            "specifications": {
+              "Material": "Plastic",
+              "Color": "Red",
+              "Length": "10cm"
+            },
+            "images": ["testImage1.jpg", "testImage2.jpg"],
+            "catalogFile": "testCatalog.pdf"
+          }
+        },
+        "expectedResponses": {
+          "success": {
+            "status": 201,
+            "hasFields": ["_id", "name", "description", "category", "features", "specifications", "images", "catalogFile"]
+          },
+          "error": {
+            "status": 401,
+            "message": "Not authorized, no token"
+          }
+        }
+      },
+      "updateProduct": {
+        "endpoint": "/api/products/{id}",
+        "method": "PUT",
+        "description": "Update a product (admin only)",
+        "requiresAuth": true,
+        "requiresAdmin": true,
+        "contentType": "multipart/form-data",
+        "testData": {
+          "validUpdate": {
+            "name": "Updated Product Name",
+            "description": "Updated product description",
+            "category": "security-seals",
+            "features": "Updated Feature 1, Updated Feature 2"
+          }
+        },
+        "expectedResponses": {
+          "success": {
+            "status": 200,
+            "hasFields": ["_id", "name", "description", "category"]
+          },
+          "error": {
+            "status": 404,
+            "message": "Product not found"
+          }
+        }
+      },
+      "deleteProduct": {
+        "endpoint": "/api/products/{id}",
+        "method": "DELETE",
+        "description": "Delete a product (admin only)",
+        "requiresAuth": true,
+        "requiresAdmin": true,
+        "testData": {
+          "validId": "validProductId",
+          "invalidId": "invalidProductId"
+        },
+        "expectedResponses": {
+          "success": {
+            "status": 200,
+            "message": "Product removed"
+          },
+          "error": {
+            "status": 404,
+            "message": "Product not found"
+          }
+        }
+      },
+      "deleteProductImage": {
+        "endpoint": "/api/products/{id}/images/{imageId}",
+        "method": "DELETE",
+        "description": "Delete a product image (admin only)",
+        "requiresAuth": true,
+        "requiresAdmin": true,
+        "testData": {
+          "validIds": {
+            "productId": "validProductId",
+            "imageId": "validImageId"
+          },
+          "invalidIds": {
+            "productId": "validProductId",
+            "imageId": "invalidImageId"
+          }
+        },
+        "expectedResponses": {
+          "success": {
+            "status": 200,
+            "message": "Image removed"
+          },
+          "error": {
+            "status": 404,
+            "message": "Image not found"
+          }
+        }
+      },
+      "setMainProductImage": {
+        "endpoint": "/api/products/{id}/images/{imageId}/main",
+        "method": "PUT",
+        "description": "Set a product image as main (admin only)",
+        "requiresAuth": true,
+        "requiresAdmin": true,
+        "testData": {
+          "validIds": {
+            "productId": "validProductId",
+            "imageId": "validImageId"
+          }
+        },
+        "expectedResponses": {
+          "success": {
+            "status": 200,
+            "message": "Main image updated"
+          },
+          "error": {
+            "status": 404,
+            "message": "Image not found"
+          }
+        }
+      },
+      "getProductsByCategory": {
+        "endpoint": "/api/products/category/{category}",
+        "method": "GET",
+        "description": "Get products by category",
+        "testData": {
+          "validCategory": "security-seals",
+          "invalidCategory": "nonexistent-category"
+        },
+        "expectedResponses": {
+          "success": {
+            "status": 200,
+            "isArray": true
+          }
+        }
+      },
+      "createProductReview": {
+        "endpoint": "/api/products/{id}/reviews",
+        "method": "POST",
+        "description": "Create a product review",
+        "requiresAuth": true,
+        "testData": {
+          "validReview": {
+            "rating": 5,
+            "comment": "This is a great product!"
+          },
+          "invalidReview": {
+            "comment": "Missing rating"
+          }
+        },
+        "expectedResponses": {
+          "success": {
+            "status": 201,
+            "message": "Review added"
+          },
+          "error": {
+            "status": 400,
+            "message": "Please select a rating"
+          }
+        }
+      },
+      "getTopProducts": {
+        "endpoint": "/api/products/top",
+        "method": "GET",
+        "description": "Get top-rated products",
+        "testData": {},
+        "expectedResponses": {
+          "success": {
+            "status": 200,
+            "isArray": true
+          }
+        }
+      },
+      "getProductsBySearch": {
+        "endpoint": "/api/products/search",
+        "method": "GET",
+        "description": "Search products",
+        "testData": {
+          "validKeyword": {
+            "keyword": "seal"
+          }
+        },
+        "expectedResponses": {
+          "success": {
+            "status": 200,
+            "isArray": true
+          }
+        }
+      },
+      "getProductsByFilter": {
+        "endpoint": "/api/products/filter",
+        "method": "GET",
+        "description": "Filter products",
+        "testData": {
+          "validFilter": {
+            "category": "security-seals"
+          }
+        },
+        "expectedResponses": {
+          "success": {
+            "status": 200,
+            "isArray": true
+          }
+        }
+      }
+    },
+    "serviceAPIs": {
+      "getServices": {
+        "endpoint": "/api/services",
+        "method": "GET",
+        "description": "Get all services",
+        "testData": {},
+        "expectedResponses": {
+          "success": {
+            "status": 200,
+            "isArray": true
+          }
+        }
+      },
+      "getServiceById": {
+        "endpoint": "/api/services/{id}",
+        "method": "GET",
+        "description": "Get a single service by ID",
+        "testData": {
+          "validId": "validServiceId",
+          "invalidId": "invalidServiceId"
+        },
+        "expectedResponses": {
+          "success": {
+            "status": 200,
+            "hasFields": ["_id", "name", "description", "benefits", "images"]
+          },
+          "error": {
+            "status": 404,
+            "message": "Service not found"
+          }
+        }
+      },
+      "createService": {
+        "endpoint": "/api/services",
+        "method": "POST",
+        "description": "Create a new service (admin only)",
+        "requiresAuth": true,
+        "requiresAdmin": true,
+        "contentType": "multipart/form-data",
+        "testData": {
+          "validService": {
+            "name": "Test Service",
+            "description": "This is a test service",
+            "benefits": "Benefit 1, Benefit 2, Benefit 3",
+            "images": ["testImage1.jpg", "testImage2.jpg"]
+          }
+        },
+        "expectedResponses": {
+          "success": {
+            "status": 201,
+            "hasFields": ["_id", "name", "description", "benefits", "images"]
+          },
+          "error": {
+            "status": 401,
+            "message": "Not authorized, no token"
+          }
+        }
+      },
+      "updateService": {
+        "endpoint": "/api/services/{id}",
+        "method": "PUT",
+        "description": "Update a service (admin only)",
+        "requiresAuth": true,
+        "requiresAdmin": true,
+        "contentType": "multipart/form-data",
+        "testData": {
+          "validUpdate": {
+            "name": "Updated Service Name",
+            "description": "Updated service description",
+            "benefits": "Updated Benefit 1, Updated Benefit 2"
+          }
+        },
+        "expectedResponses": {
+          "success": {
+            "status": 200,
+            "hasFields": ["_id", "name", "description", "benefits"]
+          },
+          "error": {
+            "status": 404,
+            "message": "Service not found"
+          }
+        }
+      },
+      "deleteService": {
+        "endpoint": "/api/services/{id}",
+        "method": "DELETE",
+        "description": "Delete a service (admin only)",
+        "requiresAuth": true,
+        "requiresAdmin": true,
+        "testData": {
+          "validId": "validServiceId",
+          "invalidId": "invalidServiceId"
+        },
+        "expectedResponses": {
+          "success": {
+            "status": 200,
+            "message": "Service removed"
+          },
+          "error": {
+            "status": 404,
+            "message": "Service not found"
+          }
+        }
+      },
+      "deleteServiceImage": {
+        "endpoint": "/api/services/{id}/images/{imageId}",
+        "method": "DELETE",
+        "description": "Delete a service image (admin only)",
+        "requiresAuth": true,
+        "requiresAdmin": true,
+        "testData": {
+          "validIds": {
+            "serviceId": "validServiceId",
+            "imageId": "validImageId"
+          },
+          "invalidIds": {
+            "serviceId": "validServiceId",
+            "imageId": "invalidImageId"
+          }
+        },
+        "expectedResponses": {
+          "success": {
+            "status": 200,
+            "message": "Image removed"
+          },
+          "error": {
+            "status": 404,
+            "message": "Image not found"
+          }
+        }
+      },
+      "setMainServiceImage": {
+        "endpoint": "/api/services/{id}/images/{imageId}/main",
+        "method": "PUT",
+        "description": "Set a service image as main (admin only)",
+        "requiresAuth": true,
+        "requiresAdmin": true,
+        "testData": {
+          "validIds": {
+            "serviceId": "validServiceId",
+            "imageId": "validImageId"
+          }
+        },
+        "expectedResponses": {
+          "success": {
+            "status": 200,
+            "message": "Main image updated"
+          },
+          "error": {
+            "status": 404,
+            "message": "Image not found"
+          }
+        }
+      }
+    },
+    "partnerAPIs": {
+      "getPartners": {
+        "endpoint": "/api/partners",
+        "method": "GET",
+        "description": "Get all partners",
+        "testData": {},
+        "expectedResponses": {
+          "success": {
+            "status": 200,
+            "isArray": true
+          }
+        }
+      },
+      "getPartnerById": {
+        "endpoint": "/api/partners/{id}",
+        "method": "GET",
+        "description": "Get a single partner by ID",
+        "testData": {
+          "validId": "validPartnerId",
+          "invalidId": "invalidPartnerId"
+        },
+        "expectedResponses": {
+          "success": {
+            "status": 200,
+            "hasFields": ["_id", "name", "description", "website", "logo"]
+          },
+          "error": {
+            "status": 404,
+            "message": "Partner not found"
+          }
+        }
+      },
+      "createPartner": {
+        "endpoint": "/api/partners",
+        "method": "POST",
+        "description": "Create a new partner (admin only)",
+        "requiresAuth": true,
+        "requiresAdmin": true,
+        "contentType": "multipart/form-data",
+        "testData": {
+          "validPartner": {
+            "name": "Test Partner",
+            "description": "This is a test partner",
+            "website": "https://testpartner.com",
+            "logo": "testLogo.jpg"
+          }
+        },
+        "expectedResponses": {
+          "success": {
+            "status": 201,
+            "hasFields": ["_id", "name", "description", "website", "logo"]
+          },
+          "error": {
+            "status": 400,
+            "message": "Please upload a logo image"
+          }
+        }
+      },
+      "updatePartner": {
+        "endpoint": "/api/partners/{id}",
+        "method": "PUT",
+        "description": "Update a partner (admin only)",
+        "requiresAuth": true,
+        "requiresAdmin": true,
+        "contentType": "multipart/form-data",
+        "testData": {
+          "validUpdate": {
+            "name": "Updated Partner Name",
+            "description": "Updated partner description",
+            "website": "https://updatedpartner.com"
+          }
+        },
+        "expectedResponses": {
+          "success": {
+            "status": 200,
+            "hasFields": ["_id", "name", "description", "website", "logo"]
+          },
+          "error": {
+            "status": 404,
+            "message": "Partner not found"
+          }
+        }
+      },
+      "deletePartner": {
+        "endpoint": "/api/partners/{id}",
+        "method": "DELETE",
+        "description": "Delete a partner (admin only)",
+        "requiresAuth": true,
+        "requiresAdmin": true,
+        "testData": {
+          "validId": "validPartnerId",
+          "invalidId": "invalidPartnerId"
+        },
+        "expectedResponses": {
+          "success": {
+            "status": 200,
+            "message": "Partner removed"
+          },
+          "error": {
+            "status": 404,
+            "message": "Partner not found"
+          }
+        }
+      }
+    },
+    "contactAPIs": {
+      "createContact": {
+        "endpoint": "/api/contact",
+        "method": "POST",
+        "description": "Create a new contact message",
+        "testData": {
+          "validContact": {
+            "name": "Test Contact",
+            "email": "test@example.com",
+            "phone": "1234567890",
+            "message": "This is a test contact message"
+          },
+          "invalidContact": {
+            "name": "Missing Fields"
+          }
+        },
+        "expectedResponses": {
+          "success": {
+            "status": 201,
+            "message": "Thank you for your message. We will get back to you soon!"
+          },
+          "error": {
+            "status": 400,
+            "message": "Please fill all required fields"
+          }
+        }
+      },
+      "getContacts": {
+        "endpoint": "/api/contact",
+        "method": "GET",
+        "description": "Get all contact messages (admin only)",
+        "requiresAuth": true,
+        "requiresAdmin": true,
+        "testData": {},
+        "expectedResponses": {
+          "success": {
+            "status": 200,
+            "isArray": true
+          },
+          "error": {
+            "status": 401,
+            "message": "Not authorized, no token"
+          }
+        }
+      },
+      "getContactById": {
+        "endpoint": "/api/contact/{id}",
+        "method": "GET",
+        "description": "Get a single contact message by ID (admin only)",
+        "requiresAuth": true,
+        "requiresAdmin": true,
+        "testData": {
+          "validId": "validContactId",
+          "invalidId": "invalidContactId"
+        },
+        "expectedResponses": {
+          "success": {
+            "status": 200,
+            "hasFields": ["_id", "name", "email", "phone", "message", "isRead", "createdAt"]
+          },
+          "error": {
+            "status": 404,
+            "message": "Contact not found"
+          }
+        }
+      },
+      "markContactAsRead": {
+        "endpoint": "/api/contact/{id}/read",
+        "method": "PUT",
+        "description": "Mark a contact message as read (admin only)",
+        "requiresAuth": true,
+        "requiresAdmin": true,
+        "testData": {
+          "validId": "validContactId",
+          "invalidId": "invalidContactId"
+        },
+        "expectedResponses": {
+          "success": {
+            "status": 200,
+            "message": "Contact marked as read"
+          },
+          "error": {
+            "status": 404,
+            "message": "Contact not found"
+          }
+        }
+      },
+      "deleteContact": {
+        "endpoint": "/api/contact/{id}",
+        "method": "DELETE",
+        "description": "Delete a contact message (admin only)",
+        "requiresAuth": true,
+        "requiresAdmin": true,
+        "testData": {
+          "validId": "validContactId",
+          "invalidId": "invalidContactId"
+        },
+        "expectedResponses": {
+          "success": {
+            "status": 200,
+            "message": "Contact message removed"
+          },
+          "error": {
+            "status": 404,
+            "message": "Contact not found"
+          }
+        }
+      }
+    }
+  },
+  "sampleData": {
+    "user": {
+      "admin": {
+        "name": "Admin User",
+        "email": "admin@speedsafe.com",
+        "password": "admin123",
+        "isAdmin": true
+      },
+      "regular": {
+        "name": "Regular User",
+        "email": "user@speedsafe.com",
+        "password": "user123",
+        "isAdmin": false
+      }
+    },
+    "product": {
+      "sample1": {
+        "name": "Security Seal Type A",
+        "description": "High-security plastic seal for transportation",
+        "category": "security-seals",
+        "features": ["Tamper-evident", "Numbered sequence", "Weather-resistant"],
+        "specifications": {
+          "Material": "Polypropylene",
+          "Color": "Blue, Red, Green",
+          "Length": "30cm",
+          "Diameter": "8mm"
+        }
+      },
+      "sample2": {
+        "name": "Metal Bolt Seal",
+        "description": "Heavy-duty metal bolt seal for containers",
+        "category": "security-seals",
+        "features": ["High strength", "ISO compliant", "Laser engraved"],
+        "specifications": {
+          "Material": "Hardened Steel",
+          "Color": "Silver",
+          "Length": "8cm",
+          "Diameter": "18mm"
+        }
+      }
+    },
+    "service": {
+      "sample1": {
+        "name": "Security Consulting",
+        "description": "Expert consulting for supply chain security",
+        "benefits": ["Risk assessment", "Compliance guidance", "Training programs"]
+      },
+      "sample2": {
+        "name": "Custom Seal Solutions",
+        "description": "Tailored security seal solutions for your specific needs",
+        "benefits": ["Custom branding", "Special materials", "Integration with tracking systems"]
+      }
+    },
+    "partner": {
+      "sample1": {
+        "name": "Global Shipping Inc.",
+        "description": "Leading shipping and logistics company",
+        "website": "https://globalshipping.example.com"
+      },
+      "sample2": {
+        "name": "SecureTech Systems",
+        "description": "Innovative security technology provider",
+        "website": "https://securetech.example.com"
+      }
+    },
+    "contact": {
+      "sample1": {
+        "name": "John Doe",
+        "email": "john@speedsafe.com",
+        "phone": "1234567890",
+        "message": "I need information about your security seals for shipping containers."
+      },
+      "sample2": {
+        "name": "Jane Smith",
+        "email": "jane@speedsafe.com",
+        "phone": "9876543210",
+        "message": "Please send me a quote for 1000 plastic seals."
+      }
+    }
+  },
+  "authHelpers": {
+    "loginAndGetToken": {
+      "endpoint": "/api/users/login",
+      "method": "POST",
+      "body": {
+        "email": "admin@speedsafe.com",
+        "password": "admin123"
+      }
+    },
+    "headerSetup": {
+      "withAuth": {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer {token}"
+      },
+      "withoutAuth": {
+        "Content-Type": "application/json"
+      },
+      "multipartWithAuth": {
+        "Authorization": "Bearer {token}"
+      },
+      "multipartWithoutAuth": {}
+    }
+  },
+  "usageInstructions": {
+    "authentication": "For protected endpoints, first use the loginAndGetToken request to obtain a JWT token. Then include this token in the Authorization header.",
+    "fileUploads": "For endpoints requiring file uploads (marked with 'contentType': 'multipart/form-data'), use multipart form data to send both text fields and files.",
+    "pagination": "Some list endpoints support pagination using query parameters 'page' and 'limit'.",
+    "errorHandling": "All API responses include appropriate HTTP status codes and error messages for troubleshooting."
+  }
+} 
