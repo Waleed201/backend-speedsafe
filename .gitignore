@@ -1,18 +1,58 @@
 # dependencies
 /node_modules
+/*/node_modules
 
 # environment variables
 .env
+.env.local
+.env.development
+.env.test
+.env.production
+.env*.local
 
 # logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+logs
+*.log
 
 # uploads - we don't want to commit user uploaded files
+/public/uploads
+/public/uploads/*
 /uploads
+
+# database
+/db-dump
+*.dump
+/mongodb
+mongodb-data
 
 # misc
 .DS_Store
 .idea
-.vscode 
+.vscode
+Thumbs.db
+*.swp
+*.swo
+
+# testing
+/coverage
+/test_files
+
+# build / generated files
+/dist
+/build
+.next
+.cache
+.turbo
+
+# debug
+.pnpm-debug.log*
+
+# Postman files with credentials
+speedsafe_postman_environment.json
+
+# Local files
+**/local/*
+*/local/* 
