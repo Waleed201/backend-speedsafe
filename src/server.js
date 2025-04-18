@@ -22,6 +22,7 @@ const productRoutes = require('./routes/productRoutes');
 const serviceRoutes = require('./routes/serviceRoutes');
 const partnerRoutes = require('./routes/partnerRoutes');
 const contactRoutes = require('./routes/contactRoutes');
+const companyInfoRoutes = require('./routes/companyInfoRoutes');
 
 // Connect to database
 connectDB();
@@ -152,6 +153,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/partners', partnerRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/company-info', companyInfoRoutes);
 
 // Debug route to check database connection
 app.get('/debug/database', async (req, res) => {
@@ -190,243 +192,101 @@ app.get('/debug/database', async (req, res) => {
 });
 
 // Debug route to test image serving
-app.get('/debug/image-test', (req, res) => {
-  res.send(`
-    <html>
-      <head>
-        <title>Image Test</title>
-        <style>
-          body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-          img { max-width: 100%; border: 1px solid #ddd; margin: 10px 0; }
-          .success { color: green; }
-          .error { color: red; }
-        </style>
-      </head>
-      <body>
-        <h1>Image Serving Test</h1>
-        <p>This page tests if images are being served correctly from your backend.</p>
+// app.get('/debug/image-test', (req, res) => {
+//   res.send(`
+//     <html>
+//       <head>
+//         <title>Image Test</title>
+//         <style>
+//           body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+//           img { max-width: 100%; border: 1px solid #ddd; margin: 10px 0; }
+//           .success { color: green; }
+//           .error { color: red; }
+//         </style>
+//       </head>
+//       <body>
+//         <h1>Image Serving Test</h1>
+//         <p>This page tests if images are being served correctly from your backend.</p>
         
-        <h2>Test 1: Direct image references</h2>
-        <div id="images-container">
-          <p>Loading images...</p>
-        </div>
+//         <h2>Test 1: Direct image references</h2>
+//         <div id="images-container">
+//           <p>Loading images...</p>
+//         </div>
 
-        <script>
-          // Fetch all products to get some image paths
-          fetch('/api/products')
-            .then(response => response.json())
-            .then(products => {
-              const container = document.getElementById('images-container');
-              container.innerHTML = '';
+//         <script>
+//           // Fetch all products to get some image paths
+//           fetch('/api/products')
+//             .then(response => response.json())
+//             .then(products => {
+//               const container = document.getElementById('images-container');
+//               container.innerHTML = '';
               
-              if (products && products.length > 0) {
-                products.forEach(product => {
-                  if (product.images && product.images.length > 0) {
-                    const imgPath = product.images[0].path;
-                    const fullImgUrl = imgPath.startsWith('/') ? imgPath : '/' + imgPath;
+//               if (products && products.length > 0) {
+//                 products.forEach(product => {
+//                   if (product.images && product.images.length > 0) {
+//                     const imgPath = product.images[0].path;
+//                     const fullImgUrl = imgPath.startsWith('/') ? imgPath : '/' + imgPath;
                     
-                    const imgElement = document.createElement('div');
-                    imgElement.innerHTML = \`
-                      <h3>\${product.name}</h3>
-                      <p>Image URL: \${fullImgUrl}</p>
-                      <img src="\${fullImgUrl}" onload="this.parentNode.classList.add('success')" onerror="this.parentNode.classList.add('error')" />
-                      <p class="status">Status: <span id="status-\${product._id}">Loading...</span></p>
-                    \`;
+//                     const imgElement = document.createElement('div');
+//                     imgElement.innerHTML = \`
+//                       <h3>\${product.name}</h3>
+//                       <p>Image URL: \${fullImgUrl}</p>
+//                       <img src="\${fullImgUrl}" onload="this.parentNode.classList.add('success')" onerror="this.parentNode.classList.add('error')" />
+//                       <p class="status">Status: <span id="status-\${product._id}">Loading...</span></p>
+//                     \`;
                     
-                    container.appendChild(imgElement);
+//                     container.appendChild(imgElement);
                     
-                    // Also try a fetch to see if we can get the image directly
-                    fetch(fullImgUrl)
-                      .then(response => {
-                        if (response.ok) {
-                          document.getElementById(\`status-\${product._id}\`).textContent = 'Image loaded successfully';
-                          document.getElementById(\`status-\${product._id}\`).style.color = 'green';
-                        } else {
-                          document.getElementById(\`status-\${product._id}\`).textContent = \`Error: \${response.status} \${response.statusText}\`;
-                          document.getElementById(\`status-\${product._id}\`).style.color = 'red';
-                        }
-                      })
-                      .catch(error => {
-                        document.getElementById(\`status-\${product._id}\`).textContent = \`Fetch error: \${error.message}\`;
-                        document.getElementById(\`status-\${product._id}\`).style.color = 'red';
-                      });
-                  }
-                });
-              } else {
-                container.innerHTML = '<p>No products with images found</p>';
-              }
-            })
-            .catch(error => {
-              document.getElementById('images-container').innerHTML = \`<p class="error">Error fetching products: \${error.message}</p>\`;
-            });
-        </script>
-      </body>
-    </html>
-  `);
-});
+//                     // Also try a fetch to see if we can get the image directly
+//                     fetch(fullImgUrl)
+//                       .then(response => {
+//                         if (response.ok) {
+//                           document.getElementById(\`status-\${product._id}\`).textContent = 'Image loaded successfully';
+//                           document.getElementById(\`status-\${product._id}\`).style.color = 'green';
+//                         } else {
+//                           document.getElementById(\`status-\${product._id}\`).textContent = \`Error: \${response.status} \${response.statusText}\`;
+//                           document.getElementById(\`status-\${product._id}\`).style.color = 'red';
+//                         }
+//                       })
+//                       .catch(error => {
+//                         document.getElementById(\`status-\${product._id}\`).textContent = \`Error: \${error.message}\`;
+//                         document.getElementById(\`status-\${product._id}\`).style.color = 'red';
+//                       });
+//                   }
+//                 });
+//               } else {
+//                 container.innerHTML = '<p>No products with images found</p>';
+//               }
+//             });
+//         </script>
+//       </body>
+//     </html>
+//   `);
+// });
 
-// Debug route to check admin users
-app.get('/debug/admin-users', async (req, res) => {
-  try {
-    // Get all admin users (without returning passwords)
-    const adminUsers = await mongoose.connection.db.collection('users').find({}).toArray();
-    
-    // Return sanitized user data (remove password)
-    const sanitizedUsers = adminUsers.map(user => {
-      const { password, ...userWithoutPassword } = user;
-      return userWithoutPassword;
-    });
-    
-    res.json({
-      count: sanitizedUsers.length,
-      users: sanitizedUsers
-    });
-  } catch (error) {
-    console.error('Debug admin users error:', error);
-    res.status(500).json({ 
-      error: 'Database query error',
-      message: error.message
-    });
-  }
-});
-
-// Debug route for testing auth
-app.get('/debug/auth-test', async (req, res) => {
-  try {
-    const User = mongoose.model('User');
-    const testEmail = 'admin@speedsafe.com';
-    
-    // Find user by email
-    const user = await User.findOne({ email: testEmail });
-    
-    if (!user) {
-      return res.json({ 
-        status: 'error',
-        message: 'Test user not found',
-        solution: 'Run the seeder script to create admin user'
-      });
-    }
-    
-    // Test a known password (DO NOT USE IN PRODUCTION)
-    const passwordTest = await user.matchPassword('admin123');
-    
-    res.json({
-      status: 'success',
-      userFound: !!user,
-      email: user.email,
-      passwordMatches: passwordTest,
-      suggestion: passwordTest ? 
-        'Login should work with email: admin@speedsafe.com, password: admin123' : 
-        'Password does not match, try running seeder script again'
-    });
-  } catch (error) {
-    console.error('Auth test error:', error);
-    res.status(500).json({ 
-      error: 'Authentication test failed',
-      message: error.message
-    });
-  }
-});
-
-// Debug route for testing login form
-app.get('/debug/login-test', (req, res) => {
-  res.send(`
-    <html>
-      <head>
-        <title>Login Test</title>
-        <style>
-          body { font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; }
-          .form-group { margin-bottom: 15px; }
-          label { display: block; margin-bottom: 5px; }
-          input { width: 100%; padding: 8px; box-sizing: border-box; }
-          button { padding: 10px 15px; background: #007bff; color: white; border: none; cursor: pointer; }
-          .result { margin-top: 20px; padding: 15px; border: 1px solid #ddd; display: none; }
-          .success { background-color: #d4edda; color: #155724; }
-          .error { background-color: #f8d7da; color: #721c24; }
-          pre { white-space: pre-wrap; overflow-wrap: break-word; }
-        </style>
-      </head>
-      <body>
-        <h1>Login Test Form</h1>
-        <p>Use this form to test direct login to the API.</p>
-        
-        <div class="form-group">
-          <label for="email">Email Address:</label>
-          <input type="email" id="email" value="admin@speedsafe.com" placeholder="Enter email">
-        </div>
-        
-        <div class="form-group">
-          <label for="password">Password:</label>
-          <input type="password" id="password" value="admin123" placeholder="Enter password">
-        </div>
-        
-        <button id="login-btn">Test Login</button>
-        
-        <div id="result" class="result">
-          <h3>Response:</h3>
-          <pre id="response-data"></pre>
-        </div>
-        
-        <script>
-          document.getElementById('login-btn').addEventListener('click', async () => {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const resultDiv = document.getElementById('result');
-            const responseData = document.getElementById('response-data');
-            
-            try {
-              const response = await fetch('/api/users/login', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ email, password })
-              });
-              
-              const data = await response.json();
-              
-              resultDiv.style.display = 'block';
-              if (response.ok) {
-                resultDiv.className = 'result success';
-                responseData.textContent = JSON.stringify(data, null, 2);
-              } else {
-                resultDiv.className = 'result error';
-                responseData.textContent = JSON.stringify(data, null, 2);
-              }
-            } catch (error) {
-              resultDiv.style.display = 'block';
-              resultDiv.className = 'result error';
-              responseData.textContent = 'Error: ' + error.message;
-            }
-          });
-        </script>
-      </body>
-    </html>
-  `);
-});
-
-// Basic route for testing
-app.get('/', (req, res) => {
-  res.send('SpeedSafe API is running...');
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
-  res.status(statusCode);
-  res.json({
-    message: err.message,
-    stack: process.env.NODE_ENV === 'production' ? null : err.stack,
+// Catch 404 and forward to error handler
+app.use((req, res, next) => {
+  res.status(404).json({
+    message: 'Endpoint not found'
   });
 });
 
-// 404 handler - must be after all routes
-app.use('*', (req, res) => {
-  res.status(404).json({ message: 'Route not found' });
+// Error handler
+app.use((err, req, res, next) => {
+  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+  console.error(`Error: ${err.message}, Stack: ${err.stack}`);
+  
+  res.status(statusCode).json({
+    message: err.message,
+    stack: process.env.NODE_ENV === 'production' ? '🥞' : err.stack,
+  });
 });
 
-// Start server
+// Start the server
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-}); 
+  console.log(`API URL: http://localhost:${PORT}/api`);
+});
+
+module.exports = app;
