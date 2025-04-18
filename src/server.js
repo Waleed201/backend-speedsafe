@@ -155,6 +155,16 @@ app.use('/api/partners', partnerRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/company-info', companyInfoRoutes);
 
+// Add a health check endpoint for deployment platforms
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'success',
+    message: 'SpeedSafe API is running',
+    environment: process.env.NODE_ENV,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Debug route to check database connection
 app.get('/debug/database', async (req, res) => {
   try {
