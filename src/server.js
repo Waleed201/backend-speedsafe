@@ -23,6 +23,7 @@ const serviceRoutes = require('./routes/serviceRoutes');
 const partnerRoutes = require('./routes/partnerRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const companyInfoRoutes = require('./routes/companyInfoRoutes');
+const contentRoutes = require('./routes/contentRoutes');
 
 // Connect to database
 connectDB();
@@ -154,6 +155,7 @@ app.use('/api/services', serviceRoutes);
 app.use('/api/partners', partnerRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/company-info', companyInfoRoutes);
+app.use('/api/content', contentRoutes);
 
 // Add a health check endpoint for deployment platforms
 app.get('/', (req, res) => {
