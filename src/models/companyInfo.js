@@ -2,6 +2,10 @@ const mongoose = require('mongoose');
 
 const companyInfoSchema = mongoose.Schema(
   {
+    logo: {
+      path: { type: String, default: "" },
+      altText: { type: String, default: "Company Logo" }
+    },
     address: {
       street: { type: String, required: true, default: "123 Security Avenue" },
       suite: { type: String, default: "Suite 500" },

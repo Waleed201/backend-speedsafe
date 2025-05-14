@@ -9,6 +9,8 @@ const storage = multer.diskStorage({
     // Determine the appropriate subfolder based on field name first, then route
     if (file.fieldname === 'catalogFile') {
       uploadPath += 'catalogs';
+    } else if (file.fieldname === 'logo') {
+      uploadPath += 'company';
     } else if (req.originalUrl.includes('/products')) {
       uploadPath += 'products';
     } else if (req.originalUrl.includes('/partners')) {
@@ -63,7 +65,8 @@ const upload = multer({
   }
 }).fields([
   { name: 'images', maxCount: 5 },
-  { name: 'catalogFile', maxCount: 1 }
+  { name: 'catalogFile', maxCount: 1 },
+  { name: 'logo', maxCount: 1 }
 ]);
 
 // Error handling middleware for file upload errors

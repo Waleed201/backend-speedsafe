@@ -100,7 +100,8 @@ const uploadDirectories = [
   path.join(__dirname, '../public/uploads/products'),
   path.join(__dirname, '../public/uploads/services'),
   path.join(__dirname, '../public/uploads/partners'),
-  path.join(__dirname, '../public/uploads/catalogs')
+  path.join(__dirname, '../public/uploads/catalogs'),
+  path.join(__dirname, '../public/uploads/company')
 ];
 
 uploadDirectories.forEach(dir => {
