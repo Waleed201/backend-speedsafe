@@ -1,6 +1,8 @@
 const asyncHandler = require('express-async-handler');
 const CompanyInfo = require('../models/companyInfo');
 const path = require('path');
+const fs = require('fs');
+const { uploadToCloudinary, deleteFromCloudinary } = require('../utils/cloudinary');
 
 /**
  * @desc    Get company information
@@ -44,6 +46,14 @@ const updateCompanyInfo = asyncHandler(async (req, res) => {
   if (logo) {
     companyInfo.logo.path = logo.path || companyInfo.logo.path;
     companyInfo.logo.altText = logo.altText || companyInfo.logo.altText;
+    
+    // Add Cloudinary-specific fields if provided
+    if (logo.public_id) {
+      companyInfo.logo.public_id = logo.public_id;
+    }
+    if (logo.secure_url) {
+      companyInfo.logo.secure_url = logo.secure_url;
+    }
   }
   
   // Update address if provided
@@ -86,7 +96,7 @@ const updateCompanyInfo = asyncHandler(async (req, res) => {
 });
 
 /**
- * @desc    Upload company logo
+ * @desc    Upload company logo to Cloudinary
  * @route   POST /api/company-info/logo
  * @access  Private/Admin
  */
@@ -99,29 +109,64 @@ const uploadLogo = asyncHandler(async (req, res) => {
 
   const logoFile = req.files.logo[0];
   
-  // Create the relative path that will be stored in the database
-  const relativePath = `/uploads/company/${logoFile.filename}`;
-  
-  // Find and update company info with new logo path
-  let companyInfo = await CompanyInfo.findOne();
-  
-  if (!companyInfo) {
-    companyInfo = new CompanyInfo({});
+  try {
+    // Upload to Cloudinary
+    const uploadResult = await uploadToCloudinary(logoFile.path, {
+      folder: 'speedsafe/company',
+      public_id: `company_logo_${Date.now()}`,
+      overwrite: true,
+      resource_type: 'image'
+    });
+    
+    console.log('Cloudinary upload result:', uploadResult);
+    
+    // Find and update company info with new logo data
+    let companyInfo = await CompanyInfo.findOne();
+    
+    if (!companyInfo) {
+      companyInfo = new CompanyInfo({});
+    }
+    
+    // Delete old logo from Cloudinary if exists
+    if (companyInfo.logo && companyInfo.logo.public_id) {
+      try {
+        await deleteFromCloudinary(companyInfo.logo.public_id);
+        console.log('Old logo deleted from Cloudinary');
+      } catch (deleteError) {
+        console.error('Error deleting old logo:', deleteError);
+        // Continue with the update even if deletion fails
+      }
+    }
+    
+    // Update logo information
+    companyInfo.logo = {
+      path: uploadResult.url,
+      secure_url: uploadResult.secure_url,
+      public_id: uploadResult.public_id,
+      altText: req.body.altText || 'Company Logo'
+    };
+    
+    // Save updated company info
+    await companyInfo.save();
+    
+    // Remove temporary file after uploading to Cloudinary
+    fs.unlinkSync(logoFile.path);
+    
+    res.status(200).json({ 
+      message: 'Logo uploaded successfully to Cloudinary',
+      logo: companyInfo.logo
+    });
+  } catch (error) {
+    console.error('Error in logo upload:', error);
+    
+    // Remove temporary file in case of error
+    if (fs.existsSync(logoFile.path)) {
+      fs.unlinkSync(logoFile.path);
+    }
+    
+    res.status(500);
+    throw new Error(`Logo upload failed: ${error.message}`);
   }
-  
-  // Update logo information
-  companyInfo.logo = {
-    path: relativePath,
-    altText: req.body.altText || 'Company Logo'
-  };
-  
-  // Save updated company info
-  await companyInfo.save();
-  
-  res.status(200).json({ 
-    message: 'Logo uploaded successfully',
-    logo: companyInfo.logo
-  });
 });
 
 module.exports = {

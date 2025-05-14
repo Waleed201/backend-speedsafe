@@ -4,6 +4,8 @@ const companyInfoSchema = mongoose.Schema(
   {
     logo: {
       path: { type: String, default: "" },
+      secure_url: { type: String, default: "" },
+      public_id: { type: String, default: "" },
       altText: { type: String, default: "Company Logo" }
     },
     address: {

@@ -1,6 +1,28 @@
 const Product = require('../models/productModel');
 const fs = require('fs');
 const path = require('path');
+const { uploadToCloudinary, deleteFromCloudinary } = require('../utils/cloudinary');
+
+// Helper function to upload file to Cloudinary
+const uploadFileToCloudinary = async (file, folderName) => {
+  try {
+    const result = await uploadToCloudinary(file.path, {
+      folder: `speedsafe/${folderName}`,
+      public_id: `${folderName}_${Date.now()}`,
+      resource_type: 'auto'
+    });
+    
+    // Delete local file after upload
+    if (fs.existsSync(file.path)) {
+      fs.unlinkSync(file.path);
+    }
+    
+    return result;
+  } catch (error) {
+    console.error(`Error uploading to Cloudinary (${folderName}):`, error);
+    throw error;
+  }
+};
 
 // @desc    Fetch all products
 // @route   GET /api/products
@@ -58,24 +80,33 @@ const createProduct = async (req, res) => {
       category
     } = req.body;
     
-    
     // Handle uploaded images
     const images = [];
     if (req.files && req.files.images) {
-      req.files.images.forEach((file, index) => {
-        // Store just the relative path from the public directory
-        const relativePath = `uploads/products/${path.basename(file.path)}`;
-        console.log('Storing image path:', relativePath);
-        images.push({
-          path: relativePath,
-          isMain: index === 0 // First image is the main image
-        });
-      });
+      // Upload each image to Cloudinary
+      for (let i = 0; i < req.files.images.length; i++) {
+        try {
+          const file = req.files.images[i];
+          const uploadResult = await uploadFileToCloudinary(file, 'products');
+          
+          images.push({
+            path: uploadResult.url,
+            secure_url: uploadResult.secure_url,
+            public_id: uploadResult.public_id,
+            isMain: i === 0 // First image is the main image
+          });
+        } catch (error) {
+          console.error('Image upload error:', error);
+          // Continue with other images even if one fails
+        }
+      }
     }
     
     // Handle catalog file
     let catalog = {
       file: null,
+      secure_url: '',
+      public_id: '',
       fileType: '',
       fileName: '',
       uploadDate: null
@@ -83,17 +114,26 @@ const createProduct = async (req, res) => {
     let hasCatalog = false;
     
     if (req.files && req.files.catalogFile && req.files.catalogFile.length > 0) {
-      const catalogFile = req.files.catalogFile[0];
-      const fileExtension = path.extname(catalogFile.originalname).toLowerCase().replace('.', '');
-      
-      catalog = {
-        file: `/uploads/catalogs/${path.basename(catalogFile.path)}`,
-        fileType: fileExtension,
-        fileName: catalogFile.originalname,
-        uploadDate: new Date()
-      };
-      hasCatalog = true;
-      console.log('Storing catalog:', catalog);
+      try {
+        const catalogFile = req.files.catalogFile[0];
+        const fileExtension = path.extname(catalogFile.originalname).toLowerCase().replace('.', '');
+        
+        // Upload catalog to Cloudinary
+        const uploadResult = await uploadFileToCloudinary(catalogFile, 'catalogs');
+        
+        catalog = {
+          file: uploadResult.url,
+          secure_url: uploadResult.secure_url,
+          public_id: uploadResult.public_id,
+          fileType: fileExtension,
+          fileName: catalogFile.originalname,
+          uploadDate: new Date()
+        };
+        hasCatalog = true;
+      } catch (error) {
+        console.error('Catalog upload error:', error);
+        // Continue creating the product even if catalog upload fails
+      }
     }
     
     const product = new Product({
@@ -132,37 +172,56 @@ const updateProduct = async (req, res) => {
       
       // Handle uploaded images
       if (req.files && req.files.images) {
-        // Add new images
-        req.files.images.forEach(file => {
-          const relativePath = `uploads/products/${path.basename(file.path)}`;
-          product.images.push({
-            path: relativePath,
-            isMain: product.images.length === 0 // Make it main if no images exist
-          });
-        });
+        // Upload new images to Cloudinary
+        for (const file of req.files.images) {
+          try {
+            const uploadResult = await uploadFileToCloudinary(file, 'products');
+            
+            product.images.push({
+              path: uploadResult.url,
+              secure_url: uploadResult.secure_url,
+              public_id: uploadResult.public_id,
+              isMain: product.images.length === 0 // Make it main if no images exist
+            });
+          } catch (error) {
+            console.error('Image upload error during update:', error);
+            // Continue with other images even if one fails
+          }
+        }
       }
       
       // Handle catalog file
       if (req.files && req.files.catalogFile && req.files.catalogFile.length > 0) {
-        // Remove old catalog if exists
-        if (product.catalog && product.catalog.file) {
-          const oldPath = path.join(__dirname, '../../', product.catalog.file);
-          if (fs.existsSync(oldPath)) {
-            fs.unlinkSync(oldPath);
+        try {
+          // Remove old catalog from Cloudinary if exists
+          if (product.catalog && product.catalog.public_id) {
+            try {
+              await deleteFromCloudinary(product.catalog.public_id);
+            } catch (deleteError) {
+              console.error('Error deleting old catalog:', deleteError);
+              // Continue even if deletion fails
+            }
           }
+          
+          // Upload new catalog
+          const catalogFile = req.files.catalogFile[0];
+          const fileExtension = path.extname(catalogFile.originalname).toLowerCase().replace('.', '');
+          
+          const uploadResult = await uploadFileToCloudinary(catalogFile, 'catalogs');
+          
+          product.catalog = {
+            file: uploadResult.url,
+            secure_url: uploadResult.secure_url,
+            public_id: uploadResult.public_id,
+            fileType: fileExtension,
+            fileName: catalogFile.originalname,
+            uploadDate: new Date()
+          };
+          product.hasCatalog = true;
+        } catch (error) {
+          console.error('Catalog upload error during update:', error);
+          // Continue updating the product even if catalog upload fails
         }
-        
-        // Add new catalog
-        const catalogFile = req.files.catalogFile[0];
-        const fileExtension = path.extname(catalogFile.originalname).toLowerCase().replace('.', '');
-        
-        product.catalog = {
-          file: `/uploads/catalogs/${path.basename(catalogFile.path)}`,
-          fileType: fileExtension,
-          fileName: catalogFile.originalname,
-          uploadDate: new Date()
-        };
-        product.hasCatalog = true;
       }
       
       const updatedProduct = await product.save();
@@ -184,49 +243,39 @@ const deleteProduct = async (req, res) => {
     const product = await Product.findById(req.params.id);
     
     if (product) {
-      // Delete associated images
+      // Delete associated images from Cloudinary
       if (product.images && product.images.length > 0) {
-        product.images.forEach(image => {
-          try {
-            // Handle both formats of image paths (with or without leading slash)
-            const imagePath = path.join(__dirname, '../../public', image.path.startsWith('/') ? image.path.substring(1) : image.path);
-            console.log('Attempting to delete image from:', imagePath);
-            if (fs.existsSync(imagePath)) {
-              fs.unlinkSync(imagePath);
-              console.log('Successfully deleted image file:', imagePath);
-            } else {
-              console.log('Image file not found:', imagePath);
+        for (const image of product.images) {
+          if (image.public_id) {
+            try {
+              await deleteFromCloudinary(image.public_id);
+              console.log('Successfully deleted image from Cloudinary:', image.public_id);
+            } catch (err) {
+              console.error('Error deleting image from Cloudinary:', err);
+              // Continue deleting other images even if one fails
             }
-          } catch (err) {
-            console.error('Error deleting image file:', err);
           }
-        });
+        }
       }
       
-      // Delete catalog if exists
-      if (product.catalog && product.catalog.file) {
+      // Delete catalog from Cloudinary if exists
+      if (product.catalog && product.catalog.public_id) {
         try {
-          // Handle both formats of catalog paths (with or without leading slash)
-          const catalogPath = path.join(__dirname, '../../public', product.catalog.file.startsWith('/') ? product.catalog.file.substring(1) : product.catalog.file);
-          console.log('Attempting to delete catalog from:', catalogPath);
-          if (fs.existsSync(catalogPath)) {
-            fs.unlinkSync(catalogPath);
-            console.log('Successfully deleted catalog file:', catalogPath);
-          } else {
-            console.log('Catalog file not found:', catalogPath);
-          }
+          await deleteFromCloudinary(product.catalog.public_id);
+          console.log('Successfully deleted catalog from Cloudinary:', product.catalog.public_id);
         } catch (err) {
-          console.error('Error deleting catalog file:', err);
+          console.error('Error deleting catalog from Cloudinary:', err);
+          // Continue with product deletion even if catalog deletion fails
         }
       }
       
       await product.deleteOne();
-      res.json({ message: 'Product and all associated files removed' });
+      res.json({ message: 'Product removed' });
     } else {
       res.status(404).json({ message: 'Product not found' });
     }
   } catch (error) {
-    console.error('Error deleting product:', error);
+    console.error(error);
     res.status(500).json({ message: 'Server Error' });
   }
 };

@@ -14,8 +14,18 @@ const partnerSchema = new mongoose.Schema(
       type: String
     },
     logo: {
-      type: String,
-      required: true
+      path: {
+        type: String,
+        required: true
+      },
+      secure_url: {
+        type: String,
+        default: ""
+      },
+      public_id: {
+        type: String,
+        default: ""
+      }
     }
   },
   {

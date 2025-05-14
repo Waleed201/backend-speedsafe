@@ -95,23 +95,13 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Ensure upload directories exist
-const uploadDirectories = [
-  path.join(__dirname, '../public/uploads'),
-  path.join(__dirname, '../public/uploads/products'),
-  path.join(__dirname, '../public/uploads/services'),
-  path.join(__dirname, '../public/uploads/partners'),
-  path.join(__dirname, '../public/uploads/catalogs'),
-  path.join(__dirname, '../public/uploads/company')
-];
+const tempDir = path.join(__dirname, '../temp');
+if (!fs.existsSync(tempDir)) {
+  fs.mkdirSync(tempDir, { recursive: true });
+  console.log(`Created temp directory: ${tempDir}`);
+}
 
-uploadDirectories.forEach(dir => {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-    console.log(`Created directory: ${dir}`);
-  }
-});
-
-// Serve uploaded files - with security consideration
+// Serve public static files
 app.use(express.static(path.join(__dirname, '../public'), {
   setHeaders: (res, path) => {
     // Set cache control for static assets
@@ -123,29 +113,6 @@ app.use(express.static(path.join(__dirname, '../public'), {
     
     // Remove content-type sniffing for security
     res.setHeader('X-Content-Type-Options', 'nosniff');
-  }
-}));
-
-// Set specific headers for uploads directory
-app.use('/uploads', express.static(path.join(__dirname, '../public/uploads'), {
-  setHeaders: (res, path) => {
-    // Set appropriate CORS headers specifically for images
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-    
-    // Cache control
-    res.setHeader('Cache-Control', 'public, max-age=31536000');
-    
-    // Set Content-Type explicitly for images based on extension
-    if (path.endsWith('.jpg') || path.endsWith('.jpeg')) {
-      res.setHeader('Content-Type', 'image/jpeg');
-    } else if (path.endsWith('.png')) {
-      res.setHeader('Content-Type', 'image/png');
-    } else if (path.endsWith('.gif')) {
-      res.setHeader('Content-Type', 'image/gif');
-    } else if (path.endsWith('.webp')) {
-      res.setHeader('Content-Type', 'image/webp');
-    }
   }
 }));
 

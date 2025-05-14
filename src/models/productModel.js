@@ -15,6 +15,14 @@ const productSchema = new mongoose.Schema({
         type: String,
         required: true
       },
+      secure_url: {
+        type: String,
+        default: ""
+      },
+      public_id: {
+        type: String,
+        default: ""
+      },
       isMain: {
         type: Boolean,
         default: false
@@ -29,6 +37,14 @@ const productSchema = new mongoose.Schema({
     file: {
       type: String,
       default: null
+    },
+    secure_url: {
+      type: String,
+      default: ""
+    },
+    public_id: {
+      type: String,
+      default: ""
     },
     fileType: {
       type: String,

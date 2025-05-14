@@ -1,29 +1,17 @@
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 
-// Define storage settings for different file types
+// Create temp directory if it doesn't exist
+const tempDir = path.join(__dirname, '../../temp');
+if (!fs.existsSync(tempDir)) {
+  fs.mkdirSync(tempDir, { recursive: true });
+}
+
+// Define storage settings for temporary file storage before Cloudinary upload
 const storage = multer.diskStorage({
   destination: function(req, file, cb) {
-    let uploadPath = '../../public/uploads/';
-    
-    // Determine the appropriate subfolder based on field name first, then route
-    if (file.fieldname === 'catalogFile') {
-      uploadPath += 'catalogs';
-    } else if (file.fieldname === 'logo') {
-      uploadPath += 'company';
-    } else if (req.originalUrl.includes('/products')) {
-      uploadPath += 'products';
-    } else if (req.originalUrl.includes('/partners')) {
-      uploadPath += 'partners';
-    } else if (req.originalUrl.includes('/services')) {
-      uploadPath += 'services';
-    }
-    
-    // Resolve to absolute path to avoid any confusion
-    const absolutePath = path.resolve(__dirname, uploadPath);
-    console.log('Saving file to:', absolutePath);
-    
-    cb(null, absolutePath);
+    cb(null, tempDir);
   },
   filename: function(req, file, cb) {
     // Create a unique filename: original name + timestamp + extension

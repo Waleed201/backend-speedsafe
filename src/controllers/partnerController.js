@@ -1,6 +1,28 @@
 const Partner = require('../models/partnerModel');
 const fs = require('fs');
 const path = require('path');
+const { uploadToCloudinary, deleteFromCloudinary } = require('../utils/cloudinary');
+
+// Helper function to upload file to Cloudinary
+const uploadFileToCloudinary = async (file, folderName) => {
+  try {
+    const result = await uploadToCloudinary(file.path, {
+      folder: `speedsafe/${folderName}`,
+      public_id: `${folderName}_${Date.now()}`,
+      resource_type: 'image'
+    });
+    
+    // Delete local file after upload
+    if (fs.existsSync(file.path)) {
+      fs.unlinkSync(file.path);
+    }
+    
+    return result;
+  } catch (error) {
+    console.error(`Error uploading to Cloudinary (${folderName}):`, error);
+    throw error;
+  }
+};
 
 // @desc    Fetch all partners
 // @route   GET /api/partners
@@ -45,19 +67,25 @@ const createPartner = async (req, res) => {
       return res.status(400).json({ message: 'Please upload a logo image' });
     }
     
-    const logoPath = `/uploads/partners/${path.basename(req.files.images[0].path)}`;
+    // Upload logo to Cloudinary
+    const logoFile = req.files.images[0];
+    const uploadResult = await uploadFileToCloudinary(logoFile, 'partners');
     
     const partner = new Partner({
       name,
       description,
       website,
-      logo: logoPath
+      logo: {
+        path: uploadResult.url,
+        secure_url: uploadResult.secure_url,
+        public_id: uploadResult.public_id
+      }
     });
     
     const createdPartner = await partner.save();
     res.status(201).json(createdPartner);
   } catch (error) {
-    console.error(error);
+    console.error('Partner creation error:', error);
     res.status(500).json({ message: 'Server Error' });
   }
 };
@@ -77,15 +105,32 @@ const updatePartner = async (req, res) => {
       partner.website = website || partner.website;
       
       // Handle logo upload
-      if (req.file) {
-        // Remove old logo if exists
-        const oldLogoPath = path.join(__dirname, '../../', partner.logo);
-        if (fs.existsSync(oldLogoPath)) {
-          fs.unlinkSync(oldLogoPath);
+      if (req.files && req.files.images && req.files.images.length > 0) {
+        try {
+          // Delete old logo from Cloudinary if exists
+          if (partner.logo && partner.logo.public_id) {
+            try {
+              await deleteFromCloudinary(partner.logo.public_id);
+            } catch (deleteError) {
+              console.error('Error deleting old logo:', deleteError);
+              // Continue even if deletion fails
+            }
+          }
+          
+          // Upload new logo to Cloudinary
+          const logoFile = req.files.images[0];
+          const uploadResult = await uploadFileToCloudinary(logoFile, 'partners');
+          
+          // Update logo information
+          partner.logo = {
+            path: uploadResult.url,
+            secure_url: uploadResult.secure_url,
+            public_id: uploadResult.public_id
+          };
+        } catch (error) {
+          console.error('Logo upload error during update:', error);
+          // Continue updating partner even if logo upload fails
         }
-        
-        // Add new logo
-        partner.logo = `/uploads/partners/${path.basename(req.file.path)}`;
       }
       
       const updatedPartner = await partner.save();
@@ -107,10 +152,15 @@ const deletePartner = async (req, res) => {
     const partner = await Partner.findById(req.params.id);
     
     if (partner) {
-      // Delete logo file
-      const logoPath = path.join(__dirname, '../../', partner.logo);
-      if (fs.existsSync(logoPath)) {
-        fs.unlinkSync(logoPath);
+      // Delete logo from Cloudinary if exists
+      if (partner.logo && partner.logo.public_id) {
+        try {
+          await deleteFromCloudinary(partner.logo.public_id);
+          console.log('Successfully deleted logo from Cloudinary:', partner.logo.public_id);
+        } catch (err) {
+          console.error('Error deleting logo from Cloudinary:', err);
+          // Continue with partner deletion even if logo deletion fails
+        }
       }
       
       await partner.deleteOne();
