@@ -31,6 +31,16 @@ connectDB();
 // Initialize express
 const app = express();
 
+// Add a health check endpoint for deployment platforms - moved to top priority
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'success',
+    message: 'SpeedSafe API is running',
+    environment: process.env.NODE_ENV,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Security middleware
 // Apply helmet for security headers with custom CSP for images
 app.use(
@@ -126,16 +136,6 @@ app.use('/api/partners', partnerRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/company-info', companyInfoRoutes);
 app.use('/api/content', contentRoutes);
-
-// Add a health check endpoint for deployment platforms
-app.get('/', (req, res) => {
-  res.status(200).json({
-    status: 'success',
-    message: 'SpeedSafe API is running',
-    environment: process.env.NODE_ENV,
-    timestamp: new Date().toISOString()
-  });
-});
 
 // Debug route to check database connection
 app.get('/debug/database', async (req, res) => {
