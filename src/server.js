@@ -59,23 +59,7 @@ app.use(
 
 // CORS configuration
 const corsOptions = {
-  origin: [
-    'http://localhost:3000', 
-    'http://localhost:3001', 
-    'http://localhost:3002', 
-    'http://localhost:3005', 
-    'http://localhost:5173',
-    'https://frontend-7xz95vgzp-waleed201s-projects.vercel.app',
-    'https://speedsafe-frontend.vercel.app',
-    'https://speedsafe.vercel.app',
-    'https://speed-safe.vercel.app',
-    'https://test.kfupm-yb.com',
-    'https://admin.kfupm-yb.com',
-    'https://*.vercel.app',  // This will allow all subdomains on vercel.app
-    'https://speedsafe.com.sa',
-    'https://www.speedsafe.com.sa',
-    'https://admin.speedsafe.com.sa'
-  ],
+  origin: '*', // Allow all origins for now
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
   exposedHeaders: ['Content-Length', 'X-Requested-With'],
@@ -123,6 +107,8 @@ app.use(express.static(path.join(__dirname, '../public'), {
     // Allow cross-origin access to images and other assets
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
     
     // Remove content-type sniffing for security
     res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -172,6 +158,17 @@ app.get('/debug/database', async (req, res) => {
       message: error.message
     });
   }
+});
+
+// Debug route for CORS testing
+app.get('/debug/cors', (req, res) => {
+  res.json({
+    success: true,
+    message: 'CORS is configured correctly',
+    origin: req.headers.origin || 'No origin header',
+    headers: req.headers,
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Debug route to test image serving
