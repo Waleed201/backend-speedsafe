@@ -61,7 +61,9 @@ const corsOptions = {
     'https://speed-safe.vercel.app',
     'https://test.kfupm-yb.com',
     'https://admin.kfupm-yb.com',
-    'https://*.vercel.app'  // This will allow all subdomains on vercel.app
+    'https://*.vercel.app',  // This will allow all subdomains on vercel.app
+    'https:speedsafe.com.sa',
+    'https:admin.speedsafe.com.sa'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
