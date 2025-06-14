@@ -4,7 +4,7 @@ const { protect, admin } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-// Public routes
+// Public routes - can specify language with ?lang=EN or ?lang=AR
 router.get('/:type', getContentByType);
 
 // Admin only routes

@@ -7,7 +7,12 @@ const contentSchema = mongoose.Schema(
       type: String,
       required: true,
       enum: ['home', 'about', 'services', 'products', 'partners', 'gallery', 'contact'],
-      unique: true
+    },
+    language: {
+      type: String,
+      required: true,
+      enum: ['EN', 'AR'],
+      default: 'EN'
     },
     data: {
       type: mongoose.Schema.Types.Mixed,
@@ -19,13 +24,17 @@ const contentSchema = mongoose.Schema(
   }
 );
 
-// Helper method to find or create content by type
-contentSchema.statics.findOrCreateByType = async function(contentType, defaultData = {}) {
-  let content = await this.findOne({ contentType });
+// Create a compound index for contentType and language to ensure uniqueness
+contentSchema.index({ contentType: 1, language: 1 }, { unique: true });
+
+// Helper method to find or create content by type and language
+contentSchema.statics.findOrCreateByType = async function(contentType, language = 'EN', defaultData = {}) {
+  let content = await this.findOne({ contentType, language });
   
   if (!content) {
     content = await this.create({
       contentType,
+      language,
       data: defaultData
     });
   }
