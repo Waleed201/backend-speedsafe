@@ -39,7 +39,8 @@ const updateCompanyInfo = asyncHandler(async (req, res) => {
     phone,
     email,
     businessHours,
-    socialMedia
+    socialMedia,
+    themeColor
   } = req.body;
   
   // Update logo if provided
@@ -89,6 +90,11 @@ const updateCompanyInfo = asyncHandler(async (req, res) => {
     companyInfo.socialMedia.twitter = socialMedia.twitter || companyInfo.socialMedia.twitter;
     companyInfo.socialMedia.instagram = socialMedia.instagram || companyInfo.socialMedia.instagram;
     companyInfo.socialMedia.linkedin = socialMedia.linkedin || companyInfo.socialMedia.linkedin;
+  }
+  
+  // Update themeColor if provided
+  if (themeColor) {
+    companyInfo.themeColor = themeColor;
   }
   
   const updatedCompanyInfo = await companyInfo.save();

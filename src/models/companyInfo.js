@@ -34,6 +34,10 @@ const companyInfoSchema = mongoose.Schema(
       instagram: { type: String, default: "" },
       linkedin: { type: String, default: "" }
     },
+    themeColor: {
+      type: String,
+      default: "yellow" // Default yellow color
+    },
     createdAt: {
       type: Date,
       default: Date.now
