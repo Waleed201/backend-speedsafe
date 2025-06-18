@@ -76,7 +76,9 @@ const createProduct = async (req, res) => {
     // Extract data from request body with defaults for required fields
     const { 
       name, 
+      nameAr,
       description,  
+      descriptionAr,
       category
     } = req.body;
     
@@ -138,7 +140,9 @@ const createProduct = async (req, res) => {
     
     const product = new Product({
       name,
+      nameAr,
       description,
+      descriptionAr,
       category,
       images,
       catalog,
@@ -161,13 +165,15 @@ const createProduct = async (req, res) => {
 // @access  Private/Admin
 const updateProduct = async (req, res) => {
   try {
-    const { name, description, category } = req.body;
+    const { name, nameAr, description, descriptionAr, category } = req.body;
     
     const product = await Product.findById(req.params.id);
     
     if (product) {
       product.name = name || product.name;
+      product.nameAr = nameAr || product.nameAr;
       product.description = description || product.description;
+      product.descriptionAr = descriptionAr || product.descriptionAr;
       product.category = category || product.category;
       
       // Handle uploaded images
@@ -413,7 +419,9 @@ const getProductsBySearch = async (req, res) => {
       ? {
           $or: [
             { name: { $regex: req.query.keyword, $options: 'i' } },
+            { nameAr: { $regex: req.query.keyword, $options: 'i' } },
             { description: { $regex: req.query.keyword, $options: 'i' } },
+            { descriptionAr: { $regex: req.query.keyword, $options: 'i' } },
           ],
         }
       : {};

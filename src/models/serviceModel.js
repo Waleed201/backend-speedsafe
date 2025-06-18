@@ -7,9 +7,18 @@ const serviceSchema = new mongoose.Schema(
       required: true,
       trim: true
     },
+    nameAr: {
+      type: String,
+      trim: true,
+      default: ''
+    },
     description: {
       type: String,
       required: true
+    },
+    descriptionAr: {
+      type: String,
+      default: ''
     },
     images: [
       {

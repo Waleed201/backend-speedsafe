@@ -60,7 +60,7 @@ const getServiceById = async (req, res) => {
 // @access  Private/Admin
 const createService = async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const { name, nameAr, description, descriptionAr } = req.body;
 
     // Handle uploaded images
     const images = [];
@@ -120,7 +120,9 @@ const createService = async (req, res) => {
 
     const service = new Service({
       name,
+      nameAr,
       description,
+      descriptionAr,
       images,
       catalog,
       hasCatalog
@@ -142,13 +144,15 @@ const createService = async (req, res) => {
 // @access  Private/Admin
 const updateService = async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const { name, nameAr, description, descriptionAr } = req.body;
     
     const service = await Service.findById(req.params.id);
     
     if (service) {
       service.name = name || service.name;
+      service.nameAr = nameAr || service.nameAr;
       service.description = description || service.description;
+      service.descriptionAr = descriptionAr || service.descriptionAr;
       
       // Handle uploaded images
       if (req.files && req.files.images) {

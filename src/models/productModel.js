@@ -6,6 +6,11 @@ const productSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  nameAr: {
+    type: String,
+    trim: true,
+    default: ''
+  },
   category: {
     type: String
   },
@@ -32,6 +37,10 @@ const productSchema = new mongoose.Schema({
   description: {
     type: String,
     required: true
+  },
+  descriptionAr: {
+    type: String,
+    default: ''
   },
   catalog: {
     file: {

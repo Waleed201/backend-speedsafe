@@ -165,8 +165,59 @@ const initializeContent = asyncHandler(async (req, res) => {
   });
 });
 
+/**
+ * @desc    Duplicate all English content to Arabic
+ * @route   POST /api/content/duplicate-to-arabic
+ * @access  Private/Admin
+ */
+// const duplicateToArabic = asyncHandler(async (req, res) => {
+//   try {
+//     // Find all English content
+//     const englishContent = await Content.find({ language: 'EN' });
+//     const results = [];
+
+//     for (const content of englishContent) {
+//       // Check if Arabic version already exists
+//       const existingArabic = await Content.findOne({
+//         contentType: content.contentType,
+//         language: 'AR'
+//       });
+
+//       if (existingArabic) {
+//         results.push({
+//           type: content.contentType,
+//           status: 'skipped - Arabic version already exists'
+//         });
+//         continue;
+//       }
+
+//       // Create new Arabic version
+//       const arabicContent = new Content({
+//         contentType: content.contentType,
+//         language: 'AR',
+//         data: content.data // Initially copy the same data
+//       });
+
+//       await arabicContent.save();
+//       results.push({
+//         type: content.contentType,
+//         status: 'created'
+//       });
+//     }
+
+//     res.json({
+//       message: 'Content duplication completed',
+//       results
+//     });
+//   } catch (error) {
+//     res.status(500);
+//     throw new Error(`Error duplicating content: ${error.message}`);
+//   }
+// });
+
 module.exports = {
   getContentByType,
   updateContentByType,
   initializeContent
+  // duplicateToArabic
 }; 

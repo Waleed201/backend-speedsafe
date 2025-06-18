@@ -123,7 +123,7 @@ router.post('/test-full-product', upload, handleUploadErrors, (req, res) => {
     console.log('Request files:', req.files);
     
     // Manually create a product record
-    const { name, description } = req.body;
+    const { name, nameAr, description, descriptionAr } = req.body;
     
     // Process images
     let images = [];
@@ -158,7 +158,9 @@ router.post('/test-full-product', upload, handleUploadErrors, (req, res) => {
       success: true,
       product: {
         name,
+        nameAr,
         description,
+        descriptionAr,
         images,
         catalog,
         hasCatalog
