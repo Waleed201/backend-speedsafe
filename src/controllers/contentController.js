@@ -12,7 +12,7 @@ const getContentByType = asyncHandler(async (req, res) => {
   const { type } = req.params;
   const language = req.query.lang || 'EN'; // Default to English if not specified
   
-  if (!type || !['home', 'about', 'services', 'products', 'partners', 'gallery', 'contact'].includes(type)) {
+  if (!type || !['home', 'about', 'services', 'products', 'partners', 'gallery', 'contact', 'footer'].includes(type)) {
     res.status(400);
     throw new Error('Invalid content type');
   }
@@ -75,7 +75,7 @@ const updateContentByType = asyncHandler(async (req, res) => {
   const { type } = req.params;
   const { data, language = 'EN' } = req.body;
   
-  if (!type || !['home', 'about', 'services', 'products', 'partners', 'gallery', 'contact'].includes(type)) {
+  if (!type || !['home', 'about', 'services', 'products', 'partners', 'gallery', 'contact', 'footer'].includes(type)) {
     res.status(400);
     throw new Error('Invalid content type');
   }
@@ -112,7 +112,7 @@ const updateContentByType = asyncHandler(async (req, res) => {
  * @access  Private/Admin
  */
 const initializeContent = asyncHandler(async (req, res) => {
-  const contentTypes = ['home', 'about', 'services', 'products', 'partners', 'gallery', 'contact'];
+  const contentTypes = ['home', 'about', 'services', 'products', 'partners', 'gallery', 'contact', 'footer'];
   const languages = ['EN', 'AR'];
   const results = [];
   

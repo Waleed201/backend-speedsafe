@@ -6,7 +6,7 @@ const contentSchema = mongoose.Schema(
     contentType: {
       type: String,
       required: true,
-      enum: ['home', 'about', 'services', 'products', 'partners', 'gallery', 'contact'],
+      enum: ['home', 'about', 'services', 'products', 'partners', 'gallery', 'contact', 'footer'],
     },
     language: {
       type: String,
