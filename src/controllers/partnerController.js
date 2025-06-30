@@ -60,7 +60,7 @@ const getPartnerById = async (req, res) => {
 // @access  Private/Admin
 const createPartner = async (req, res) => {
   try {
-    const { name, description, website } = req.body;
+    const { name, nameAr, description, website } = req.body;
     
     // Handle logo upload - check req.files.images instead of req.file
     if (!req.files || !req.files.images || !req.files.images.length) {
@@ -73,6 +73,7 @@ const createPartner = async (req, res) => {
     
     const partner = new Partner({
       name,
+      nameAr,
       description,
       website,
       logo: {
@@ -95,12 +96,13 @@ const createPartner = async (req, res) => {
 // @access  Private/Admin
 const updatePartner = async (req, res) => {
   try {
-    const { name, description, website } = req.body;
+    const { name, nameAr, description, website } = req.body;
     
     const partner = await Partner.findById(req.params.id);
     
     if (partner) {
       partner.name = name || partner.name;
+      partner.nameAr = nameAr !== undefined ? nameAr : partner.nameAr;
       partner.description = description || partner.description;
       partner.website = website || partner.website;
       
